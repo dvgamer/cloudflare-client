@@ -1,0 +1,17 @@
+{
+  "name": "touno-pc",
+  "version": "1.0.0",
+  "description": "Web UI Interface",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "npm run test"
+  },
+  "author": "Kananek Thongkam",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.2",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1"
+  }
+}
