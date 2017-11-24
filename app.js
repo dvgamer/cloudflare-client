@@ -11,14 +11,18 @@ const ipAddrUpdate = async (domain) => {
   await request({
     method: 'POST',
     url: 'https://touno.co/api/dns/update-ip',
-    fromData: {
-      'domain': domain,
-      'ipaddr': api.ip
+    json: true,
+    body: {
+      domain: domain,
+      addr: api.ip
     }
   })
   console.timeEnd(`[couldfare.com] Updated Domain '${domain}'`)
   console.log(`[couldfare.com] at ${moment().format('YYYY-MM-DD HH:mm:ss')} IP:'${api.ip}'`)
+  console.log(`[couldfare.com] -----------------------------------------`)
 }
+
+ipAddrUpdate('pc.touno.co')
 
 let addrUpdateTime = '30 * * * *'
 console.log(`[couldfare.com] corntab(${addrUpdateTime}) started.`)
