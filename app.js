@@ -2,7 +2,6 @@ const request = require('request-promise')
 const moment = require('moment')
 const cron = require('cron')
 
-if (!process.env.DNS_UPDATE) throw new Error(`Required 'DNS_UPDATE' environment.`)
 if (!process.env.DOMAIN_NAME) throw new Error(`Required 'DOMAIN_NAME' environment.`)
 
 const toSeconds = hr => {
@@ -16,17 +15,42 @@ const ipAddrUpdate = async domain => {
     url: 'https://api.ipify.org?format=json',
     json: true
   })
-  let updated = await request({
-    method: 'POST',
-    url: process.env.DNS_UPDATE,
-    json: true,
-    body: { domain: domain, addr: api.ip }
-  })
-  if (updated.err) {
-    console.log(`[couldfare.com] '${updated.err}' `)
+
+  if (process.env.CUSTOM_URL) {
+    let updated = await request({
+      method: 'POST',
+      url: process.env.CUSTOM_URL,
+      json: true,
+      body: { domain: domain, addr: api.ip }
+    })
+    if (updated.err) console.log(`[couldfare.com] '${updated.err}' `)
   } else {
-    console.log(`[couldfare.com] Updated '${domain}' at ${moment().format('YYYY-MM-DD HH:mm:ss')} IP:'${api.ip}' (${toSeconds(process.hrtime(begin))}s)`)
+    if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
+    if (!process.env.DOMAIN_KEY) throw new Error(`Required 'DOMAIN_KEY' environment.`)
+    if (!process.env.DOMAIN_EMAIL) throw new Error(`Required 'DOMAIN_EMAIL' environment.`)
+
+    const zone = process.env.DOMAIN_ZONE
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Auth-Key': process.env.DOMAIN_KEY,
+      'X-Auth-Email': process.env.DOMAIN_EMAIL
+    }
+    let getRecords = await request({
+      url: `https://api.cloudflare.com/client/v4/zones/${zone}/dns_records?name=${domain}`,
+      headers: headers,
+      json: true
+    })
+    if (!getRecords.success) throw new Error(`Not found record name '${domain}'`)
+    let putRecords = await request({
+      method: 'PUT',
+      url: `https://api.cloudflare.com/client/v4/zones/${zone}/dns_records/${getRecords.result[0].id}`,
+      headers: headers,
+      body: { type: getRecords.result[0].type, name: domain, content: api.ip },
+      json: true
+    })
+    if (!putRecords.success) throw new Error(`Can't PUT record name '${domain}'`)
   }
+  console.log(`[couldfare.com] Updated '${domain}' at ${moment().format('YYYY-MM-DD HH:mm:ss')} IP:'${api.ip}' (${toSeconds(process.hrtime(begin))}s)`)
 }
 
 ipAddrUpdate(process.env.DOMAIN_NAME).catch(ex => {
