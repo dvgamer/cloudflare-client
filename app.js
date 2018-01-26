@@ -23,7 +23,7 @@ const ipAddrUpdate = async domain => {
       json: true,
       body: { domain: domain, addr: api.ip }
     })
-    if (updated.err) console.log(`[couldfare.com] '${updated.err}' `)
+    if (updated.err) throw new Error(`[couldfare.com] '${updated.err}' `)
   } else {
     if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
     if (!process.env.DOMAIN_KEY) throw new Error(`Required 'DOMAIN_KEY' environment.`)
@@ -61,7 +61,7 @@ let addrUpdateTime = '30 * * * *'
 let jobUpdated = new cron.CronJob({
   cronTime: addrUpdateTime,
   onTick: () => {
-    ipAddrUpdate(this, process.env.DOMAIN_NAME).catch(ex => {
+    ipAddrUpdate(process.env.DOMAIN_NAME).catch(ex => {
       console.log(`[couldfare.com] '${ex.message}' `)
     })
   },
