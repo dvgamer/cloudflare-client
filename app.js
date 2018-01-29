@@ -1,8 +1,16 @@
 const request = require('request-promise')
 const moment = require('moment')
 const cron = require('cron')
+const Raven = require('raven')
+if (process.env.RAVEN_CONFIG) {
+  Raven.config(process.env.RAVEN_CONFIG).install((err, initialErr, eventId) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
 
 if (!process.env.DOMAIN_NAME) throw new Error(`Required 'DOMAIN_NAME' environment.`)
+if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
 
 const toSeconds = hr => {
   let seconds = (hr[0] + (hr[1] / 1e9)).toFixed(3)
@@ -21,11 +29,10 @@ const ipAddrUpdate = async domain => {
       method: 'POST',
       url: process.env.CUSTOM_URL,
       json: true,
-      body: { domain: domain, addr: api.ip }
+      body: { domain: domain, addr: api.ip, zone: process.env.DOMAIN_ZONE }
     })
     if (updated.err) throw new Error(`[couldfare.com] '${updated.err}' `)
   } else {
-    if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
     if (!process.env.DOMAIN_KEY) throw new Error(`Required 'DOMAIN_KEY' environment.`)
     if (!process.env.DOMAIN_EMAIL) throw new Error(`Required 'DOMAIN_EMAIL' environment.`)
 
@@ -53,18 +60,19 @@ const ipAddrUpdate = async domain => {
   console.log(`[couldfare.com] Updated '${domain}' at ${moment().format('YYYY-MM-DD HH:mm:ss')} IP:'${api.ip}' (${toSeconds(process.hrtime(begin))}s)`)
 }
 
-ipAddrUpdate(process.env.DOMAIN_NAME).catch(ex => {
-  console.log(`[couldfare.com] '${ex.message}' `)
-})
+const ipAddrException = ex => {
+  if (process.env.NODE_ENV === 'production' && process.env.RAVEN_CONFIG) {
+    Raven.captureException(ex)
+  } else {
+    console.log(`${ex.message}`)
+  }
+}
+ipAddrUpdate(process.env.DOMAIN_NAME).catch(ipAddrException)
 
 let addrUpdateTime = '30 * * * *'
 let jobUpdated = new cron.CronJob({
   cronTime: addrUpdateTime,
-  onTick: () => {
-    ipAddrUpdate(process.env.DOMAIN_NAME).catch(ex => {
-      console.log(`[couldfare.com] '${ex.message}' `)
-    })
-  },
+  onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(ipAddrException) },
   start: true,
   timeZone: 'Asia/Bangkok'
 })
