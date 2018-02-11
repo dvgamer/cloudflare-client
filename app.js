@@ -2,6 +2,7 @@ const request = require('request-promise')
 const moment = require('moment')
 const cron = require('cron')
 const Raven = require('raven')
+
 if (process.env.RAVEN_CONFIG) {
   Raven.config(process.env.RAVEN_CONFIG).install((err, initialErr, eventId) => {
     console.error(err)
