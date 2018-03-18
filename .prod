@@ -1,0 +1,7 @@
+TZ=Asia/Bangkok
+NODE_ENV=production
+MONGODB=aws.touno.io:6501
+RAVEN_CONFIG=https://946f2e35531649f889c03034d3b5082d:47e78a33e7924efa9874996d37a27c52@sentry.io/297900
+DOMAIN_NAME=pc.touno.io
+CUSTOM_URL=https://touno.io/api/dns/update-ip
+TZ=Asia/Bangkok

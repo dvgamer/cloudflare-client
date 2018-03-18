@@ -1,21 +1,24 @@
 {
-  "name": "cloudfare-client",
+  "name": "services-cloudflare",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "env-cmd .env node app.js",
+    "start": "env-cmd .prod node index.js",
+    "dev:win": "cls && npm run lint && npm run dev",
+    "dev": "env-cmd .env node index.js",
+    "test": "node test",
     "lint": "eslint --ext .js --ignore-path .gitignore ."
   },
   "author": "Kananek Thongkam",
-  "license": "ISC",
-  "description": "",
+  "license": "MIT",
+  "description": "ระบบอัพเดต ip ให้กับ cloudflare โดยตรงหรือ จะให้ดึง ip แล้วส่งให้กับ `CUSTOM_URL` ก็ได้",
   "dependencies": {
     "cron": "^1.3.0",
     "moment": "^2.19.2",
     "raven": "^2.4.0",
     "request": "^2.81.0",
-    "request-promise": "^4.2.0"
+    "request-promise": "^4.2.0",
+    "touno.io": "git+https://github.com/dvgamer/module-touno.io.git"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
@@ -27,5 +30,13 @@
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dvgamer/services-cloudflare.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dvgamer/services-cloudflare/issues"
+  },
+  "homepage": "https://github.com/dvgamer/services-cloudflare#readme"
 }

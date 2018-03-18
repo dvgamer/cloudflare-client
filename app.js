@@ -1,22 +1,7 @@
 const request = require('request-promise')
 const moment = require('moment')
 const cron = require('cron')
-const Raven = require('raven')
-
-if (process.env.RAVEN_CONFIG) {
-  Raven.config(process.env.RAVEN_CONFIG).install((err, initialErr, eventId) => {
-    console.error(err)
-    process.exit(1)
-  })
-}
-
-if (!process.env.DOMAIN_NAME) throw new Error(`Required 'DOMAIN_NAME' environment.`)
-if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
-
-const toSeconds = hr => {
-  let seconds = (hr[0] + (hr[1] / 1e9)).toFixed(3)
-  return seconds
-}
+const { Raven } = require('touno.io')
 
 const ipAddrUpdate = async domain => {
   let begin = process.hrtime()
@@ -24,7 +9,7 @@ const ipAddrUpdate = async domain => {
     url: 'https://api.ipify.org?format=json',
     json: true
   })
-
+  
   if (process.env.CUSTOM_URL) {
     let updated = await request({
       method: 'POST',
@@ -61,19 +46,12 @@ const ipAddrUpdate = async domain => {
   console.log(`[couldfare.com] Updated '${domain}' at ${moment().format('YYYY-MM-DD HH:mm:ss')} IP:'${api.ip}' (${toSeconds(process.hrtime(begin))}s)`)
 }
 
-const ipAddrException = ex => {
-  if (process.env.NODE_ENV === 'production' && process.env.RAVEN_CONFIG) {
-    Raven.captureException(ex)
-  } else {
-    console.log(`${ex.message}`)
-  }
-}
-ipAddrUpdate(process.env.DOMAIN_NAME).catch(ipAddrException)
+ipAddrUpdate(process.env.DOMAIN_NAME).catch(Raven)
 
 let addrUpdateTime = '30 * * * *'
 let jobUpdated = new cron.CronJob({
   cronTime: addrUpdateTime,
-  onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(ipAddrException) },
+  onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(Raven) },
   start: true,
   timeZone: 'Asia/Bangkok'
 })
