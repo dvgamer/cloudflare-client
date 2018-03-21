@@ -18,11 +18,11 @@
     "raven": "^2.4.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.0",
+    "env-cmd": "^7.0.0",
     "touno.io": "git+https://github.com/dvgamer/module-touno.io.git"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
-    "env-cmd": "^7.0.0",
     "eslint": "^4.16.0",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-plugin-html": "^4.0.2",
