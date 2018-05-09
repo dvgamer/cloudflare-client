@@ -1,15 +1,18 @@
-const request = require('request-promise')
-const moment = require('moment')
-const cron = require('cron')
-const { Raven } = require('touno.io')
+import request from 'request-promise'
+import moment from 'moment'
+import { CronJob } from 'cron'
+import { Raven } from 'touno.io'
+
+if (!process.env.DOMAIN_NAME) throw new Error(`Required 'DOMAIN_NAME' environment.`)
+if (!process.env.DOMAIN_ZONE) throw new Error(`Required 'DOMAIN_ZONE' environment.`)
 
 const ipAddrUpdate = async domain => {
-  let begin = process.hrtime()
+  // let begin = process.hrtime()
   let api = await request({
     url: 'https://api.ipify.org?format=json',
     json: true
   })
-  
+
   if (!process.env.DOMAIN_KEY) throw new Error(`Required 'DOMAIN_KEY' environment.`)
   if (!process.env.DOMAIN_EMAIL) throw new Error(`Required 'DOMAIN_EMAIL' environment.`)
 
@@ -40,7 +43,7 @@ const ipAddrUpdate = async domain => {
 }
 
 ipAddrUpdate(process.env.DOMAIN_NAME).catch(Raven)
-let jobUpdated = new cron.CronJob({
+let jobUpdated = new CronJob({
   cronTime: '30 * * * *',
   onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(Raven) },
   start: true,
