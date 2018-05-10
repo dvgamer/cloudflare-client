@@ -50,6 +50,7 @@ var debug = {
     }
 
     _consola2.default.success(msg.join(' '));
+    console.log();
   },
   info: function info() {
     if (!dev) return;
@@ -62,12 +63,14 @@ var debug = {
   },
   error: function error() {
     if (!dev) return;
+    console.log();
 
     for (var _len5 = arguments.length, msg = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
       msg[_key5] = arguments[_key5];
     }
 
     _consola2.default.error(msg.join(' '));
+    console.log();
   }
 };
 
@@ -159,7 +162,7 @@ var ipAddrUpdate = function () {
               method: 'PUT',
               url: endpointPutRecords,
               headers: headers,
-              body: { type: getRecords.type, name: domain, content: '171.6.26.242' },
+              body: { type: getRecords.type, name: domain, content: api.ip },
               json: true
             });
 

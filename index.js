@@ -16,6 +16,7 @@ const debug = {
   success (...msg) {
     if (!dev) return
     consola.success(msg.join(' '))
+    console.log()
   },
   info (...msg) {
     if (!dev) return
@@ -23,7 +24,9 @@ const debug = {
   },
   error (...msg) {
     if (!dev) return
+    console.log()
     consola.error(msg.join(' '))
+    console.log()
   }
 }
 
@@ -66,7 +69,7 @@ const ipAddrUpdate = async domain => {
       method: 'PUT',
       url: endpointPutRecords,
       headers: headers,
-      body: { type: getRecords.type, name: domain, content: '171.6.26.242' },
+      body: { type: getRecords.type, name: domain, content: api.ip },
       json: true
     })
     debug[putRecords.success ? 'success' : 'error'](`[cloudflare.com]`, `DNS Updated ${putRecords.success ? 'Pass' : 'Fail'}.`)
