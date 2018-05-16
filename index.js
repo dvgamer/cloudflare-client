@@ -1,10 +1,11 @@
+import 'babel-polyfill'
 import request from 'request-promise'
 import consola from 'consola'
 import moment from 'moment'
-// import { CronJob } from 'cron'
+import { CronJob } from 'cron'
 
 const dev = (process.env.NODE_ENV !== 'production')
-const debug = {
+const debuger = {
   log (...msg) {
     if (!dev) return
     console.log(' ', ...msg)
@@ -49,7 +50,7 @@ const ipAddrUpdate = async domain => {
     'X-Auth-Key': process.env.DOMAIN_KEY.trim(),
     'X-Auth-Email': process.env.DOMAIN_EMAIL.trim()
   }
-  debug.start(`[cloudflare.com]`, `My IP Address: ${api.ip}`)
+  debuger.start(`[cloudflare.com]`, `My IP Address: ${api.ip}`)
   if (!getRecords || !getRecords.success) {
     getRecords = await request({
       url: `https://api.cloudflare.com/client/v4/zones/${zone}/dns_records?name=${domain}`,
@@ -58,11 +59,11 @@ const ipAddrUpdate = async domain => {
       json: true
     })
 
-    debug[getRecords.success ? 'success' : 'error'](`[cloudflare.com]`, `DNS Verify ${getRecords.success ? 'Pass' : 'Fail'}.`)
+    debuger[getRecords.success ? 'success' : 'error'](`[cloudflare.com]`, `DNS Verify ${getRecords.success ? 'Pass' : 'Fail'}.`)
     if (!getRecords.success) throw new Error(`Not found record name '${domain}'`)
     getRecords = getRecords.result[0]
   }
-  debug.log(`[cloudflare.com]`, `DNS: ${getRecords.content} ${api.ip !== getRecords.content ? 'Updating...' : 'Ignore'}.`)
+  debuger.log(`[cloudflare.com]`, `DNS: ${getRecords.content} ${api.ip !== getRecords.content ? 'Updating...' : 'Ignore'}.`)
   const endpointPutRecords = `https://api.cloudflare.com/client/v4/zones/${zone.trim()}/dns_records/${getRecords.id}`
   if (api.ip !== getRecords.content) {
     let putRecords = await request({
@@ -72,19 +73,19 @@ const ipAddrUpdate = async domain => {
       body: { type: getRecords.type, name: domain, content: api.ip },
       json: true
     })
-    debug[putRecords.success ? 'success' : 'error'](`[cloudflare.com]`, `DNS Updated ${putRecords.success ? 'Pass' : 'Fail'}.`)
+    debuger[putRecords.success ? 'success' : 'error'](`[cloudflare.com]`, `DNS Updated ${putRecords.success ? 'Pass' : 'Fail'}.`)
     if (!putRecords.success) throw new Error(`Can't PUT record name '${domain}'`)
     getRecords.content = api.ip
-    debug.log(`[couldfare.com]`, `DNS: '${domain}' IP:'${api.ip}' Updated at ${moment().format('YYYY-MM-DD HH:mm:ss')}.`)
+    debuger.log(`[couldfare.com]`, `DNS: '${domain}' IP:'${api.ip}' Updated at ${moment().format('YYYY-MM-DD HH:mm:ss')}.`)
   }
 }
 
-ipAddrUpdate(process.env.DOMAIN_NAME).catch(debug.error)
-// let jobUpdated = new CronJob({
-//   cronTime: '30 * * * *',
-//   onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(debug.error) },
-//   start: true,
-//   timeZone: 'Asia/Bangkok'
-// })
+ipAddrUpdate(process.env.DOMAIN_NAME).catch(debuger.error)
+let jobUpdated = new CronJob({
+  cronTime: '30 * * * *',
+  onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(debuger.error) },
+  start: true,
+  timeZone: 'Asia/Bangkok'
+})
 
-// console.log(`[couldfare.com] Watch and updated '${process.env.DOMAIN_NAME}' ${jobUpdated.running ? 'started' : 'stoped'}.`)
+debuger.log(`[couldfare.com] Watch and updated '${process.env.DOMAIN_NAME}' ${jobUpdated.running ? 'started' : 'stoped'}.`)

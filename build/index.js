@@ -1,5 +1,7 @@
 'use strict';
 
+require('babel-polyfill');
+
 var _requestPromise = require('request-promise');
 
 var _requestPromise2 = _interopRequireDefault(_requestPromise);
@@ -12,16 +14,16 @@ var _moment = require('moment');
 
 var _moment2 = _interopRequireDefault(_moment);
 
+var _cron = require('cron');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-// import { CronJob } from 'cron'
-
 var dev = process.env.NODE_ENV !== 'production';
-var debug = {
+var debuger = {
   log: function log() {
     var _console;
 
@@ -117,7 +119,7 @@ var ipAddrUpdate = function () {
               'X-Auth-Email': process.env.DOMAIN_EMAIL.trim()
             };
 
-            debug.start('[cloudflare.com]', 'My IP Address: ' + api.ip);
+            debuger.start('[cloudflare.com]', 'My IP Address: ' + api.ip);
 
             if (!(!getRecords || !getRecords.success)) {
               _context.next = 18;
@@ -136,7 +138,7 @@ var ipAddrUpdate = function () {
             getRecords = _context.sent;
 
 
-            debug[getRecords.success ? 'success' : 'error']('[cloudflare.com]', 'DNS Verify ' + (getRecords.success ? 'Pass' : 'Fail') + '.');
+            debuger[getRecords.success ? 'success' : 'error']('[cloudflare.com]', 'DNS Verify ' + (getRecords.success ? 'Pass' : 'Fail') + '.');
 
             if (getRecords.success) {
               _context.next = 17;
@@ -149,7 +151,7 @@ var ipAddrUpdate = function () {
             getRecords = getRecords.result[0];
 
           case 18:
-            debug.log('[cloudflare.com]', 'DNS: ' + getRecords.content + ' ' + (api.ip !== getRecords.content ? 'Updating...' : 'Ignore') + '.');
+            debuger.log('[cloudflare.com]', 'DNS: ' + getRecords.content + ' ' + (api.ip !== getRecords.content ? 'Updating...' : 'Ignore') + '.');
             endpointPutRecords = 'https://api.cloudflare.com/client/v4/zones/' + zone.trim() + '/dns_records/' + getRecords.id;
 
             if (!(api.ip !== getRecords.content)) {
@@ -169,7 +171,7 @@ var ipAddrUpdate = function () {
           case 23:
             putRecords = _context.sent;
 
-            debug[putRecords.success ? 'success' : 'error']('[cloudflare.com]', 'DNS Updated ' + (putRecords.success ? 'Pass' : 'Fail') + '.');
+            debuger[putRecords.success ? 'success' : 'error']('[cloudflare.com]', 'DNS Updated ' + (putRecords.success ? 'Pass' : 'Fail') + '.');
 
             if (putRecords.success) {
               _context.next = 27;
@@ -180,7 +182,7 @@ var ipAddrUpdate = function () {
 
           case 27:
             getRecords.content = api.ip;
-            debug.log('[couldfare.com]', 'DNS: \'' + domain + '\' IP:\'' + api.ip + '\' Updated at ' + (0, _moment2.default)().format('YYYY-MM-DD HH:mm:ss') + '.');
+            debuger.log('[couldfare.com]', 'DNS: \'' + domain + '\' IP:\'' + api.ip + '\' Updated at ' + (0, _moment2.default)().format('YYYY-MM-DD HH:mm:ss') + '.');
 
           case 29:
           case 'end':
@@ -195,12 +197,14 @@ var ipAddrUpdate = function () {
   };
 }();
 
-ipAddrUpdate(process.env.DOMAIN_NAME).catch(debug.error);
-// let jobUpdated = new CronJob({
-//   cronTime: '30 * * * *',
-//   onTick: () => { ipAddrUpdate(process.env.DOMAIN_NAME).catch(debug.error) },
-//   start: true,
-//   timeZone: 'Asia/Bangkok'
-// })
+ipAddrUpdate(process.env.DOMAIN_NAME).catch(debuger.error);
+var jobUpdated = new _cron.CronJob({
+  cronTime: '30 * * * *',
+  onTick: function onTick() {
+    ipAddrUpdate(process.env.DOMAIN_NAME).catch(debuger.error);
+  },
+  start: true,
+  timeZone: 'Asia/Bangkok'
+});
 
-// console.log(`[couldfare.com] Watch and updated '${process.env.DOMAIN_NAME}' ${jobUpdated.running ? 'started' : 'stoped'}.`)
+debuger.log('[couldfare.com] Watch and updated \'' + process.env.DOMAIN_NAME + '\' ' + (jobUpdated.running ? 'started' : 'stoped') + '.');

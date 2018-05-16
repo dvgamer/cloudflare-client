@@ -13,6 +13,8 @@
   "license": "MIT",
   "description": "ระบบอัพเดต ip ให้กับ cloudflare โดยตรงหรือ จะให้ดึง ip แล้วส่งให้กับ `CUSTOM_URL` ก็ได้",
   "dependencies": {
+    "babel-core": "^6.26.3",
+    "babel-polyfill": "^6.26.0",
     "consola": "^1.3.0",
     "cron": "^1.3.0",
     "moment": "^2.22.1",
@@ -24,6 +26,7 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.2.3",
+    "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
     "env-cmd": "^7.0.0",
     "eslint": "^4.19.1",
